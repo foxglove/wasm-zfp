@@ -1,0 +1,23 @@
+{
+  "name": "wasm-zfp",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "repository": "foxglove/wasm-zfp",
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js",
+    "dist/wasm-zfp.js",
+    "dist/wasm-zfp.wasm"
+  ],
+  "scripts": {
+    "build": "./docker-build.sh",
+    "prepack": "npm run build",
+    "test": "mocha"
+  },
+  "devDependencies": {
+    "eslint": "8.30.0",
+    "mocha": "10.2.0",
+    "prettier": "2.8.1"
+  }
+}
