@@ -46,12 +46,16 @@ module.exports.decompress = function decompress(zfpBuffer, src) {
     const dataPointer = Module.getValue(zfpBuffer, "i32");
     const bufferSize = Module.getValue(zfpBuffer + 4, "i32");
     const size = Module.getValue(zfpBuffer + 8, "i32");
+    const scalarSize = Module.getValue(zfpBuffer + 12, "i32");
+    const elements = size / scalarSize;
+    const type = Module.getValue(zfpBuffer + 52, "i32");
+    const data = typedArray(type, elements);
     const output = {
-      data: new Uint8Array(size),
+      data,
       dataPointer,
       bufferSize,
       size,
-      scalarSize: Module.getValue(zfpBuffer + 12, "i32"),
+      scalarSize,
       shape: [
         Module.getValue(zfpBuffer + 16, "i32"),
         Module.getValue(zfpBuffer + 20, "i32"),
@@ -65,16 +69,16 @@ module.exports.decompress = function decompress(zfpBuffer, src) {
         Module.getValue(zfpBuffer + 44, "i32"),
       ],
       dimensions: Module.getValue(zfpBuffer + 48, "i32"),
-      type: Module.getValue(zfpBuffer + 52, "i32"),
+      type,
     };
 
-    // Copy the decompressed data into `data`
-    Buffer.from(Module.HEAPU8.buffer).copy(
-      output.data,
-      0,
-      output.dataPointer,
-      output.dataPointer + output.size
+    // Copy the decompressed data into the ArrayBuffer backing `data`
+    const outputBytes = new Uint8Array(
+      data.buffer,
+      data.byteOffset,
+      data.byteLength
     );
+    outputBytes.set(new Uint8Array(Module.HEAPU8.buffer, dataPointer, size));
 
     return output;
   } finally {
@@ -101,3 +105,18 @@ ModulePromise.then((mod) => {
     module.exports.__module = Module;
   }
 });
+
+function typedArray(type, elements) {
+  switch (type) {
+    case 1:
+      return new Int32Array(elements);
+    case 2:
+      return new BigInt64Array(elements);
+    case 3:
+      return new Float32Array(elements);
+    case 4:
+      return new Float64Array(elements);
+    default:
+      throw new Error(`Unknown zfp_type: ${type}`);
+  }
+}
