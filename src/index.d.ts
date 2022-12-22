@@ -7,7 +7,7 @@ export const enum ZfpType {
 }
 
 export type ZfpResult = {
-  data: Uint8Array;
+  data: Int32Array | BigInt64Array | Float32Array | Float64Array;
   dataPointer: number;
   bufferSize: number;
   size: number;
