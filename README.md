@@ -1,6 +1,6 @@
-# @foxglove/wasm-zfp
+# wasm-zfp
 
-[![npm version](https://img.shields.io/npm/v/@foxglove/wasm-zfp)](https://www.npmjs.com/package/@foxglove/wasm-zfp)
+[![npm version](https://img.shields.io/npm/v/wasm-zfp)](https://www.npmjs.com/package/wasm-zfp)
 
 ZFP decompression compiled to WebAssembly
 
@@ -21,7 +21,7 @@ Decompress the data (node.js example, browsers are also supported):
 
 ```ts
 import { readFileSync } from "fs";
-import Zfp from "@foxglove/wasm-zfp";
+import Zfp from "wasm-zfp";
 
 const compressed = readFileSync("compressed.zfp");
 
@@ -78,7 +78,7 @@ Docker is required to build the WebAssembly module.
 
 ## License
 
-@foxglove/wasm-zfp is licensed under [MIT License](https://opensource.org/licenses/MIT).
+wasm-zfp is licensed under [MIT License](https://opensource.org/licenses/MIT).
 
 ## Releasing
 
