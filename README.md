@@ -45,6 +45,29 @@ try {
 Zfp.freeBuffer(zfpBuffer);
 ```
 
+For the `test/compressed.zfp` file in this repository, the output is:
+
+```js
+{
+  data: Float32Array(24) [
+     0,  1,  2,  3,  4,  5,  6,  7,
+     8,  9, 10, 11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20, 21, 22, 23
+  ],
+  dataPointer: 1052800,
+  bufferSize: 96,
+  size: 96,
+  scalarSize: 4,
+  shape: [ 2, 3, 4, 0 ],
+  stride: [ 1, 2, 6, 0 ],
+  dimensions: 3,
+  type: 3
+}
+```
+
+The `dataPointer` field is an opaque pointer. The remaining fields come from the
+ZFP header and decompressed data.
+
 ## Development
 
 Docker is required to build the WebAssembly module.

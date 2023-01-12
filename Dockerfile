@@ -15,6 +15,7 @@ RUN mkdir -p build && \
   cd build && \
   emcmake cmake \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_FLAGS_RELEASE="-O3" \
   -DBUILD_ZFORP=OFF \
   -DBUILD_ZFPY=OFF \
   -DBUILD_UTILITIES=OFF \
