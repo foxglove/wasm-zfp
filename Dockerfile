@@ -8,11 +8,9 @@ RUN mkdir -p /zfp && \
   git fetch --depth 1 origin release1.0.0 && \
   git checkout FETCH_HEAD
 
-WORKDIR /zfp
-
 # Build the library
-RUN mkdir -p build && \
-  cd build && \
+RUN mkdir -p /zfp/build && \
+  cd /zfp/build && \
   emcmake cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_C_FLAGS_RELEASE="-O3" \
@@ -24,5 +22,6 @@ RUN mkdir -p build && \
   .. && \
   emmake make
 
-COPY build.sh pre.js /zfp/
-COPY src /zfp/src
+WORKDIR /wasm-zfp
+COPY build.sh pre.js /wasm-zfp/
+COPY src /wasm-zfp/src

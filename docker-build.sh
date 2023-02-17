@@ -7,4 +7,4 @@ docker build . -t wasm-zfp
 
 mkdir -p dist
 
-docker run --rm -v "${SCRIPT_DIR}/dist":/zfp/dist -t wasm-zfp ./build.sh
+docker run --rm -v "${SCRIPT_DIR}/dist":/wasm-zfp/dist -t wasm-zfp ./build.sh
