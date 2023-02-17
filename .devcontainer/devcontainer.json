@@ -1,0 +1,6 @@
+{
+  "name": "Emscripten",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  }
+}

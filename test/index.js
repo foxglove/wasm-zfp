@@ -3,6 +3,7 @@ process.env.NODE_ENV = "test";
 const fs = require("fs");
 const assert = require("assert");
 
+/** @type { import("..").Zfp } */
 const Zfp = require("../");
 
 // uncompressed.raw is a 2x3x4 array of float32s
@@ -30,7 +31,7 @@ assert.throws(() => {
   Zfp.createBuffer();
 });
 
-describe("wasm-zfp", () => {
+describe("decompression", () => {
   it("waits until module is ready", (done) => {
     Zfp.isLoaded.then(done);
   });
@@ -115,6 +116,91 @@ describe("wasm-zfp", () => {
         zfpBuffer,
         new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
       );
+    });
+
+    Zfp.freeBuffer(zfpBuffer);
+  });
+});
+
+describe("compression", () => {
+  it("compresses vec3f", () => {
+    const zfpBuffer = Zfp.createBuffer();
+    // `zfp -i uncompressed.raw -h -f -3 2 3 4 -a 1 -z compressed.zfp`
+    const zfpInput = {
+      data: float32s,
+      shape: [2, 3, 4, 0],
+      strides: [1, 2, 6, 0],
+      dimensions: 3,
+    };
+    const output = Zfp.compress(zfpBuffer, zfpInput, { tolerance: 1 });
+
+    // Compare byte-for-byte with `compressed`
+    assert(output.byteLength === compressed.byteLength)
+    for (var i = 0; i < output.byteLength; i++) {
+      assert(
+        output[i] === compressed[i],
+        `${i}: ${output[i]} !== ${compressed[i]}`
+      );
+    }
+
+    Zfp.freeBuffer(zfpBuffer);
+  });
+
+  it("compresses vec3i64", () => {
+    const zfpBuffer = Zfp.createBuffer();
+    // `zfp -i uncompressedi64.raw -h -t i64 -1 10 -R -z compressedi64.zfp`
+    const zfpInput = {
+      data: int64s,
+      shape: [10, 0, 0, 0],
+      strides: [1, 0, 0, 0],
+      dimensions: 1,
+    };
+    const output = Zfp.compress(zfpBuffer, zfpInput);
+
+    // Compare byte-for-byte with `compressedi64`
+    assert(output.byteLength === compressedi64.byteLength)
+    for (var i = 0; i < output.byteLength; i++) {
+      assert(
+        output[i] === compressedi64[i],
+        `${i}: ${output[i]} !== ${compressedi64[i]}`
+      );
+    }
+
+    Zfp.freeBuffer(zfpBuffer);
+  });
+
+  it("does not grow the heap after multiple compression calls", () => {
+    const zfpBuffer = Zfp.createBuffer();
+    const zfpInput = {
+      data: float32s,
+      shape: [2, 3, 4],
+      strides: [1, 2, 6],
+      dimensions: 3,
+    };
+    Zfp.compress(zfpBuffer, zfpInput);
+    const originalHeapSize = Zfp.__module.HEAP8.buffer.byteLength;
+
+    for (var i = 0; i < 50000; i++) {
+      Zfp.compress(zfpBuffer, zfpInput);
+    }
+
+    const newHeapSize = Zfp.__module.HEAP8.buffer.byteLength;
+    assert(originalHeapSize === newHeapSize, `${originalHeapSize} !== ${newHeapSize}`);
+
+    Zfp.freeBuffer(zfpBuffer);
+  });
+
+  it("throws an error if compressing invalid buffer", () => {
+    const zfpBuffer = Zfp.createBuffer();
+    const zfpInput = {
+      data: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+      shape: [2, 3, 4],
+      strides: [1, 2, 6],
+      dimensions: 3,
+    };
+
+    assert.throws(() => {
+      Zfp.compress(zfpBuffer, zfpInput);
     });
 
     Zfp.freeBuffer(zfpBuffer);

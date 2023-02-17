@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "license": "MIT",
+  "author": {
+    "name": "Foxglove Technologies Inc.",
+    "email": "contact@foxglove.dev"
+  },
   "repository": "foxglove/wasm-zfp",
   "files": [
     "dist/index.d.ts",
@@ -16,8 +20,8 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "eslint": "8.30.0",
+    "eslint": "8.34.0",
     "mocha": "10.2.0",
-    "prettier": "2.8.1"
+    "prettier": "2.8.4"
   }
 }

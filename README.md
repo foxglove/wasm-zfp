@@ -6,7 +6,7 @@ ZFP decompression compiled to WebAssembly
 
 ## Introduction
 
-This package provides a WebAssembly build of https://computing.llnl.gov/projects/zfp, the official ZFP library. A high-level decompression API is provided to decompress ZFP data with a prefixed `ZFP_HEADER_FULL` header.
+This package provides a WebAssembly build of https://computing.llnl.gov/projects/zfp, the official ZFP library. A high-level API is provided to compress and decompress ZFP data with a prefixed `ZFP_HEADER_FULL` header.
 
 ## Usage
 
@@ -17,7 +17,43 @@ Create ZFP compressed data. An example is given in the `test/` directory generat
 zfp -i uncompressed.raw -h -f -3 2 3 4 -a 1 -z compressed.zfp
 ```
 
-Decompress the data (node.js example, browsers are also supported):
+Create the same output using this library (node.js example, browsers are also supported):
+
+```ts
+import { readFileSync } from "fs";
+import Zfp from "wasm-zfp";
+
+const uncompressed = readFileSync("uncompressed.raw");
+
+// Wait for the WebAssembly module to load
+await Zfp.isLoaded;
+// Create an internal allocation for compression. This can be reused for
+// multiple compressions
+const zfpBuffer = Zfp.createBuffer();
+
+try {
+  // Create a ZfpInput object describing the uncompressed data
+  const input = {
+    data: new Float32Array(uncompressed.buffer, uncompressed.byteOffset, uncompressed.byteLength / 4),
+    shape: [2, 3, 4, 0],
+    strides: [1, 2, 6, 0],
+    dimensions: 3,
+  };
+
+  // Compress the data using `tolerance` mode with a value of 1 and return an
+  // Uint8Array containing the compressed data. `rate` and `precision` modes are
+  // also available, and lossless compression will be used if no mode is set
+  const result = Zfp.compress(zfpBuffer, input, { tolerance: 1 });
+  console.log(result);
+} catch (error) {
+  console.error(error);
+}
+
+// Free the internal allocation when it is no longer needed
+Zfp.freeBuffer(zfpBuffer);
+```
+
+Decompress the data:
 
 ```ts
 import { readFileSync } from "fs";

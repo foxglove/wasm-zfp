@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 emcc \
-  build/lib/libzfp.a -o dist/wasm-zfp.js src/wasm-zfp.c `# this runs emscripten on the code in wasm-zfp.c` \
+  /zfp/build/lib/libzfp.a -o dist/wasm-zfp.js src/wasm-zfp.c `# this runs emscripten on the code in wasm-zfp.c` \
   -O3 `# compile with all optimizations enabled` \
-  -I include `# add the zfp include directory` \
+  -I /zfp/include `# add the zfp include directory` \
   -s WASM=1 `# compile to .wasm instead of asm.js` \
   --pre-js pre.js `# include pre.js at the top of wasm-zfp.js` \
   -s MODULARIZE=1 `# include module boilerplate for better node/webpack interop` \
@@ -13,6 +13,6 @@ emcc \
   -s ALLOW_MEMORY_GROWTH=1  `# need this because we don't know how large decompressed blocks will be` \
   -s NODEJS_CATCH_EXIT=0 `# we don't use exit() and catching exit will catch all exceptions` \
   -s NODEJS_CATCH_REJECTION=0 `# prevent emscripten from adding an unhandledRejection handler` \
-  -s "EXPORTED_FUNCTIONS=['_malloc', '_free', 'getValue']" `# index.js uses Module._malloc and Module._free`
+  -s "EXPORTED_FUNCTIONS=['_malloc', '_free', 'getValue', 'setValue']" `# index.js uses Module._malloc and Module._free`
 
 cp src/index.* dist/
