@@ -37,7 +37,7 @@ declare module "wasm-zfp" {
     isLoaded: Promise<void>;
     createBuffer: () => number;
     freeBuffer: (zfpBuffer: number) => void;
-    compress: (zfpBuffer: number, input: ZfpInput, options?: ZfpCompressOptions) => ZfpResult;
+    compress: (zfpBuffer: number, input: ZfpInput, options?: ZfpCompressOptions) => Uint8Array;
     decompress: (zfpBuffer: number, src: Uint8Array) => ZfpResult;
   };
 
