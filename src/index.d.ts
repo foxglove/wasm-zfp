@@ -11,7 +11,7 @@ declare module "wasm-zfp" {
   export type ZfpInput = {
     data: Int32Array | BigInt64Array | Float32Array | Float64Array;
     shape: [number, number, number, number];
-    strides: [number, number, number, number];
+    strides?: [number, number, number, number];
     dimensions: number;
   };
 
