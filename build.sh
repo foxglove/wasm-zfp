@@ -3,8 +3,11 @@
 emcc \
   /zfp/build/lib/libzfp.a -o dist/wasm-zfp.js src/wasm-zfp.c `# this runs emscripten on the code in wasm-zfp.c` \
   -O3 `# compile with all optimizations enabled` \
+  -msimd128 `# enable SIMD support` \
+  -flto `# enable link-time optimization` \
   -I /zfp/include `# add the zfp include directory` \
   -s WASM=1 `# compile to .wasm instead of asm.js` \
+  -s WASM_BIGINT `# enable BigInt support` \
   --pre-js pre.js `# include pre.js at the top of wasm-zfp.js` \
   -s MODULARIZE=1 `# include module boilerplate for better node/webpack interop` \
   -s NO_EXIT_RUNTIME=1 `# keep the process around after main exits` \

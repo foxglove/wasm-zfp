@@ -11,13 +11,13 @@ if (typeof process !== "undefined") {
 // In node, use __dirname to resolve the path to the wasm file. In the browser,
 // use require to resolve the path to the wasm file. Without this, the wasm file
 // is resolved relative to process.cwd or not bundled
-Module.locateFile = function(input) {
+Module.locateFile = function (input) {
   if (ENVIRONMENT_IS_NODE) {
     // Don't let emscripten js resolve the file to a relative path
     nodePath = {
-      normalize: function(any) {
+      normalize: function (any) {
         return any;
-      }
+      },
     };
     return __dirname + "/" + input;
   } else if (input.endsWith(".wasm")) {
