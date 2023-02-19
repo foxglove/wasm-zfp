@@ -13,7 +13,7 @@ RUN mkdir -p /zfp/build && \
   cd /zfp/build && \
   emcmake cmake \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_C_FLAGS_RELEASE="-O3" \
+  -DCMAKE_C_FLAGS_RELEASE="-O3 -msimd128 -flto" \
   -DBUILD_ZFORP=OFF \
   -DBUILD_ZFPY=OFF \
   -DBUILD_UTILITIES=OFF \
