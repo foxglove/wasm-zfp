@@ -1,20 +1,31 @@
 const ModuleFactory = require("./wasm-zfp");
 const ModulePromise = ModuleFactory();
 
-/** @typedef { import(".").ZfpBuffer } ZfpBuffer */
-/** @typedef { import(".").ZfpInput } ZfpInput */
-/** @typedef { import(".").ZfpCompressOptions } ZfpCompressOptions */
-/** @typedef { import(".").ZfpResult } ZfpResult */
+/** @typedef { import("wasm-zfp").ZfpBuffer } ZfpBuffer */
+/** @typedef { import("wasm-zfp").ZfpInput } ZfpInput */
+/** @typedef { import("wasm-zfp").ZfpCompressOptions } ZfpCompressOptions */
+/** @typedef { import("wasm-zfp").ZfpResult } ZfpResult */
 
 let Module;
 
 function ensureLoaded() {
   if (!Module) {
     throw new Error(
-      `wasm-zfp has not finished loading. Please wait with "await decompress.isLoaded" before calling decompress`
+      `wasm-zfp has not finished loading. Please wait with "await decompress.isLoaded" before calling decompress`,
     );
   }
 }
+
+/**
+ * Valid types for ZFP compression. These map to Int32Array, BigInt64Array,
+ * Float32Array, and Float64Array.
+ */
+module.exports.ZfpType = {
+  INT32: 1,
+  INT64: 2,
+  FLOAT: 3,
+  DOUBLE: 4,
+};
 
 /**
  * Allocate a scratch space buffer for encoding or decoding ZFP data.
@@ -44,27 +55,40 @@ module.exports.freeBuffer = function freeBuffer(zfpBuffer) {
 module.exports.compress = function compress(zfpBuffer, zfpInput, opts) {
   ensureLoaded();
   opts = opts ?? {};
-  const { data, shape, strides, dimensions } = zfpInput;
+  const { data, shape, dimensions } = zfpInput;
+  const strides = zfpInput.strides ?? [0, 0, 0, 0];
+  const type = zfpType(data);
+
+  if (dimensions < 1 || dimensions > 4) {
+    throw new Error(`ZFP compression failed: invalid dimensions. Expected 1-4, got ${dimensions}`);
+  }
+  if ((type === this.ZfpType.INT32 || type === this.ZfpType.INT64) && opts.tolerance != undefined) {
+    // Accuracy mode is only supported for float32 and float64
+    throw new Error(`ZFP compression failed: accuracy mode is not supported for int32 or int64`);
+  }
+
+  const scalarCount = scalarCountForShape(shape, dimensions);
+  const scalarSize = scalarSizeForType(type);
+  const size = scalarCount * scalarSize;
+
   while (shape.length < 4) {
     shape.push(0);
   }
   while (strides.length < 4) {
     strides.push(0);
   }
-  const type = zfpType(data);
-  const scalarCount = scalarCountForShape(shape, dimensions);
-  const scalarSize = scalarSizeForType(type);
-  const size = scalarCount * scalarSize;
 
   if (size === 0 || isNaN(size)) {
-    throw new Error(`ZFP compression failed: cannot compress an empty array. scalarCount=${scalarCount}, scalarSize=${scalarSize}, size=${size}`);
+    throw new Error(
+      `ZFP compression failed: cannot compress an empty array. scalarCount=${scalarCount}, scalarSize=${scalarSize}, size=${size}`,
+    );
   } else if (size > data.byteLength) {
     throw new Error(
-      `ZFP compression failed: data buffer is too small. Expected ${size} bytes, got ${data.byteLength}`
+      `ZFP compression failed: data buffer is too small. Expected ${size} bytes, got ${data.byteLength}`,
     );
   } else if (size > Module.HEAPU8.byteLength) {
     throw new Error(
-      `ZFP compression failed: Cannot allocate ${size} bytes (heap is ${Module.HEAPU8.byteLength})`
+      `ZFP compression failed: Cannot allocate ${size} bytes (heap is ${Module.HEAPU8.byteLength})`,
     );
   }
 
@@ -112,7 +136,7 @@ module.exports.compress = function compress(zfpBuffer, zfpInput, opts) {
     Module._free(srcPointer);
     Module._freeBuffer(inputBuffer);
   }
-}
+};
 
 /**
  * Decompress ZFP-compressed data (must start with a full ZFP header).
@@ -126,11 +150,7 @@ module.exports.decompress = function decompress(zfpBuffer, src) {
   const srcPointer = Module._malloc(srcSize);
 
   // Create a view into the heap and copy the source buffer into it
-  const compressedHeap = new Uint8Array(
-    Module.HEAPU8.buffer,
-    srcPointer,
-    srcSize
-  );
+  const compressedHeap = new Uint8Array(Module.HEAPU8.buffer, srcPointer, srcSize);
   compressedHeap.set(src);
 
   // Call the C function to decompress
@@ -172,11 +192,7 @@ module.exports.decompress = function decompress(zfpBuffer, src) {
     };
 
     // Copy the decompressed data into the ArrayBuffer backing `data`
-    const outputBytes = new Uint8Array(
-      data.buffer,
-      data.byteOffset,
-      data.byteLength
-    );
+    const outputBytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
     outputBytes.set(new Uint8Array(Module.HEAPU8.buffer, dataPointer, size));
 
     return output;
@@ -192,9 +208,7 @@ module.exports.decompress = function decompress(zfpBuffer, src) {
  * the module before it is loaded will throw an error.
  * @type {Promise<void>}
  */
-module.exports.isLoaded = ModulePromise.then((mod) =>
-  mod["ready"].then(() => { })
-);
+module.exports.isLoaded = ModulePromise.then((mod) => mod["ready"].then(() => {}));
 
 // Wait for the promise returned from ModuleFactory to resolve
 ModulePromise.then((mod) => {
@@ -237,10 +251,6 @@ function zfpType(data) {
 }
 
 function scalarCountForShape(shape, dimensions) {
-  if (dimensions <= 0) {
-    return 0;
-  }
-
   let count = 1;
   for (let i = 0; i < dimensions; i++) {
     count *= shape[i];

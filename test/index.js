@@ -2,8 +2,6 @@ process.env.NODE_ENV = "test";
 
 const fs = require("fs");
 const assert = require("assert");
-
-/** @type { import("..").Zfp } */
 const Zfp = require("../");
 
 // uncompressed.raw is a 2x3x4 array of float32s
@@ -146,6 +144,28 @@ describe("compression", () => {
     Zfp.freeBuffer(zfpBuffer);
   });
 
+  it("compresses vec3f without explicit strides", () => {
+    const zfpBuffer = Zfp.createBuffer();
+    // `zfp -i uncompressed.raw -h -f -3 2 3 4 -a 1 -z compressed.zfp`
+    const zfpInput = {
+      data: float32s,
+      shape: [2, 3, 4, 0],
+      dimensions: 3,
+    };
+    const output = Zfp.compress(zfpBuffer, zfpInput, { tolerance: 1 });
+
+    // Compare byte-for-byte with `compressed`
+    assert(output.byteLength === compressed.byteLength)
+    for (var i = 0; i < output.byteLength; i++) {
+      assert(
+        output[i] === compressed[i],
+        `${i}: ${output[i]} !== ${compressed[i]}`
+      );
+    }
+
+    Zfp.freeBuffer(zfpBuffer);
+  });
+
   it("compresses vec3i64", () => {
     const zfpBuffer = Zfp.createBuffer();
     // `zfp -i uncompressedi64.raw -h -t i64 -1 10 -R -z compressedi64.zfp`
@@ -173,8 +193,8 @@ describe("compression", () => {
     const zfpBuffer = Zfp.createBuffer();
     const zfpInput = {
       data: float32s,
-      shape: [2, 3, 4],
-      strides: [1, 2, 6],
+      shape: [2, 3, 4, 0],
+      strides: [1, 2, 6, 0],
       dimensions: 3,
     };
     Zfp.compress(zfpBuffer, zfpInput);

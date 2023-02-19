@@ -50,19 +50,7 @@ int EMSCRIPTEN_KEEPALIVE compress(struct ZfpBuffer* output, struct ZfpBuffer* in
     return -3;
   }
 
-  // Allocate the output buffer if needed
-  if (output->dataPointer != NULL && output->bufferSize < input->size) {
-    free(output->dataPointer);
-    output->dataPointer = NULL;
-  }
-  if (output->dataPointer == NULL) {
-    output->dataPointer = malloc(input->size);
-    output->bufferSize = input->size;
-  }
-
-  // Open the output data stream
-  bitstream* outputStream = stream_open(output->dataPointer, input->size);
-  zfp_stream* zfp = zfp_stream_open(outputStream);
+  zfp_stream* zfp = zfp_stream_open(NULL);
 
   // Set the compression parameters
   if (tolerance >= 0) {
@@ -99,6 +87,23 @@ int EMSCRIPTEN_KEEPALIVE compress(struct ZfpBuffer* output, struct ZfpBuffer* in
                               input->stride[3]);
       break;
   }
+
+  size_t compressedUpperBound = zfp_stream_maximum_size(zfp, field);
+
+  // Allocate the output buffer if needed
+  if (output->dataPointer != NULL && output->bufferSize < compressedUpperBound) {
+    free(output->dataPointer);
+    output->dataPointer = NULL;
+  }
+  if (output->dataPointer == NULL) {
+    output->dataPointer = malloc(compressedUpperBound);
+    output->bufferSize = compressedUpperBound;
+  }
+
+  // Open the output data stream
+  bitstream* outputStream = stream_open(output->dataPointer, compressedUpperBound);
+  zfp_stream_set_bit_stream(zfp, outputStream);
+  zfp_stream_rewind(zfp);
 
   // Write the header
   size_t bytesWritten = zfp_write_header(zfp, field, ZFP_HEADER_FULL);
