@@ -114,7 +114,7 @@ Docker is required to build the WebAssembly module.
 
 ## License
 
-wasm-zfp is licensed under [MIT License](https://opensource.org/licenses/MIT).
+wasm-zfp is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Releasing
 
